@@ -94,14 +94,11 @@ while page_count < max_pages:
     print(f"Found {len(results)} results on this page.")
 
     for r in results:
-        # ---------- Title extraction ----------
+        # ---------- Title extraction (preserves [HTML], [PDF], etc.) ----------
         title_tag = r.select_one(".gs_rt")
         if title_tag:
-            a_tag = title_tag.find("a")
-            if a_tag:
-                title = a_tag.get_text(" ", strip=True)
-            else:
-                title = title_tag.get_text(" ", strip=True)
+            # Get all text including the content type tags like [HTML], [PDF]
+            title = title_tag.get_text(" ", strip=True)
         else:
             title = ""
 
