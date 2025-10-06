@@ -97,6 +97,7 @@ while page_count < max_pages:
         # ---------- Title extraction (preserves [HTML], [PDF], etc. without duplication) ----------
         title_tag = r.select_one(".gs_rt")
         if title_tag:
+            print(f"Debug: {title_tag}")  # Add this line to see the HTML structure
             # Clone the element to avoid modifying the original
             title_tag_copy = BeautifulSoup(str(title_tag), "lxml").select_one(".gs_rt")
             
@@ -166,3 +167,4 @@ df = pd.DataFrame({
 
 df.to_csv("ml_articles_info.csv", index=False, encoding="utf-8")
 print(f"✅ Scraped {len(df)} articles and saved to ml_articles_info.csv")
+
