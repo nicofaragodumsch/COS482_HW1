@@ -1,5 +1,3 @@
-
-
 import time, random
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -18,29 +16,44 @@ options.add_argument('--user-data-dir=C:\\Temp\\ChromeProfile')
 # Optional tweaks that make traffic look less like a bot
 options.add_argument("--ignore-certificate-errors")
 options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("--disable-web-security")
+options.add_argument("--disable-features=IsolateOrigins,site-per-process")
 
 # CRITICAL: DO NOT use headless mode - it triggers CAPTCHA
 # options.add_argument('--headless')  # KEEP THIS COMMENTED OUT
 
-# These are fine to keep
-options.add_argument('--disable-gpu')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-dev-shm-usage')
+# Remove these - they can trigger detection
+# options.add_argument('--disable-gpu')
+# options.add_argument('--no-sandbox')
+# options.add_argument('--disable-dev-shm-usage')
 
-# Randomize window size
-options.add_argument(f"--window-size={random.randint(1000,1600)},{random.randint(700,1000)}")
+# Set a realistic window size (not randomized - too suspicious)
+options.add_argument("--window-size=1920,1080")
 
 # Additional anti-detection measures
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
+
+# Add a realistic user agent
+options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
 
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
 )
 
-# Hide webdriver property
+# Hide webdriver property and other automation indicators
+driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+    "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+})
 driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+    'source': '''
+        delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
+        delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
+        delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
+    '''
+})
 
 # ---------- Navigate to Google Scholar ----------
 base_url = (
@@ -50,7 +63,17 @@ base_url = (
 driver.get(base_url)
 
 # Random initial pause to let page load naturally
-time.sleep(random.uniform(5, 10))
+initial_sleep = random.uniform(10, 15)
+print(f"Initial page load - sleeping for {initial_sleep:.1f}s...")
+time.sleep(initial_sleep)
+
+# Check for CAPTCHA and give user time to solve it
+print("\n" + "="*60)
+print("⚠️  CHECK THE BROWSER WINDOW!")
+print("If you see a CAPTCHA, solve it now.")
+print("After the page loads normally, press Enter here to continue...")
+print("="*60 + "\n")
+input()  # Wait for manual CAPTCHA solving
 
 titles, publication_infos, citations = [], [], []
 
@@ -101,17 +124,21 @@ while page_count < max_pages:
 
     # ---------- Move to next page, or stop ----------
     try:
+        # Scroll down before clicking (more human-like)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(random.uniform(2, 4))
+        
         next_button = driver.find_element(By.LINK_TEXT, "Next")
 
-        # Add a long, random pause to look human
-        sleep_time = random.uniform(8, 15)
+        # Add a long, random pause to look human (increased significantly)
+        sleep_time = random.uniform(15, 25)
         print(f"Sleeping for {sleep_time:.1f}s before next page...")
         time.sleep(sleep_time)
 
         next_button.click()  # Use click() instead of send_keys()
         
         # Extra wait for page load
-        time.sleep(random.uniform(5, 8))
+        time.sleep(random.uniform(8, 12))
     except Exception as e:
         print(f"No more pages or error encountered: {e}")
         break
