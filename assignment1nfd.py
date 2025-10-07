@@ -9,7 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import matplotlib.pyplot as plt
 import re
 
-""" # ---------- Set up Selenium driver ----------
+# ---------- Set up Selenium driver ----------
 options = webdriver.ChromeOptions()
 
 # Use a temporary Chrome profile (not incognito, not your main profile)
@@ -172,7 +172,7 @@ df = pd.DataFrame({
 
 df.to_csv("ml_articles_info.csv", index=False, encoding="utf-8")
 print(f"Scraped {len(df)} articles and saved to ml_articles_info.csv")
- """
+
 # ---------- Task 2(a): Data Cleaning and Transformation ----------
 print("\n" + "="*60)
 print("Task 2(a): Cleaning and transforming the data...")
