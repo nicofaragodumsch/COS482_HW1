@@ -260,19 +260,22 @@ print(f"Shape: {df_cleaned.shape}")
 print("\nFirst few rows:")
 print(df_cleaned.head())
 
+# Open output file for writing results
+output_file = open("task2_results.txt", "w", encoding="utf-8")
+
 # ---------- Task 2(b): Filter articles from 2024+ with >100 citations ----------
-print("\n" + "="*60)
-print("Task 2(b): Articles from 2024+ with >100 citations")
-print("="*60)
+output_file.write("="*60 + "\n")
+output_file.write("Task 2(b): Articles from 2024+ with >100 citations\n")
+output_file.write("="*60 + "\n\n")
 
 filtered_articles = df_cleaned[(df_cleaned['year'] >= 2024) & (df_cleaned['citation_count'] > 100)]
-print(f"\nFound {len(filtered_articles)} articles:\n")
+output_file.write(f"Found {len(filtered_articles)} articles:\n\n")
 for idx, row in filtered_articles.iterrows():
-    print(f"Title: {row['title']}")
-    print(f"Authors: {row['authors']}")
-    print(f"Year: {int(row['year'])}")
-    print(f"Citations: {row['citation_count']}")
-    print("-" * 60)
+    output_file.write(f"Title: {row['title']}\n")
+    output_file.write(f"Authors: {row['authors']}\n")
+    output_file.write(f"Year: {int(row['year'])}\n")
+    output_file.write(f"Citations: {row['citation_count']}\n")
+    output_file.write("-" * 60 + "\n")
 
 # ---------- Task 2(c): Scatterplot of citation_count vs avg_citations_per_year ----------
 print("\n" + "="*60)
@@ -307,13 +310,13 @@ print("Histogram saved as histogram_avg_citations.png")
 #plt.show()
 
 # ---------- Task 2(e): Articles per year ----------
-print("\n" + "="*60)
-print("Task 2(e): Number of articles per year")
-print("="*60)
+output_file.write("\n" + "="*60 + "\n")
+output_file.write("Task 2(e): Number of articles per year\n")
+output_file.write("="*60 + "\n\n")
 
 articles_per_year = df_cleaned['year'].value_counts().sort_index()
-print("\nArticles published per year:")
-print(articles_per_year)
+output_file.write("Articles published per year:\n")
+output_file.write(str(articles_per_year) + "\n\n")
 
 plt.figure(figsize=(10, 6))
 articles_per_year.plot(kind='bar', color='steelblue', edgecolor='black')
@@ -328,13 +331,13 @@ print("Bar plot saved as barplot_articles_per_year.png")
 #plt.show()
 
 # ---------- Task 2(f): Mean citation count per year ----------
-print("\n" + "="*60)
-print("Task 2(f): Mean citation count per publication year")
-print("="*60)
+output_file.write("\n" + "="*60 + "\n")
+output_file.write("Task 2(f): Mean citation count per publication year\n")
+output_file.write("="*60 + "\n\n")
 
 mean_citations_per_year = df_cleaned.groupby('year')['citation_count'].mean().sort_index()
-print("\nMean citation count per publication year:")
-print(mean_citations_per_year)
+output_file.write("Mean citation count per publication year:\n")
+output_file.write(str(mean_citations_per_year) + "\n\n")
 
 plt.figure(figsize=(10, 6))
 mean_citations_per_year.plot(kind='bar', color='coral', edgecolor='black')
@@ -349,5 +352,13 @@ print("Bar plot saved as barplot_mean_citations_per_year.png")
 #plt.show()
 
 print("\n" + "="*60)
-print("All Task 2 analyses completed!")
+print(" All Task 2 analyses completed!")
 print("="*60)
+
+# Close the output file
+output_file.write("\n" + "="*60 + "\n")
+output_file.write("All Task 2 analyses completed!\n")
+output_file.write("="*60 + "\n")
+output_file.close()
+
+print("Results saved to task2_results.txt")
