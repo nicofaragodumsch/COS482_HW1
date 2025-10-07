@@ -9,7 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import matplotlib.pyplot as plt
 import re
 
-# ---------- Set up Selenium driver ----------
+""" # ---------- Set up Selenium driver ----------
 options = webdriver.ChromeOptions()
 
 # Use a temporary Chrome profile (not incognito, not your main profile)
@@ -171,5 +171,183 @@ df = pd.DataFrame({
 })
 
 df.to_csv("ml_articles_info.csv", index=False, encoding="utf-8")
-print(f"✅ Scraped {len(df)} articles and saved to ml_articles_info.csv")
+print(f"Scraped {len(df)} articles and saved to ml_articles_info.csv")
+ """
+# ---------- Task 2(a): Data Cleaning and Transformation ----------
+print("\n" + "="*60)
+print("Task 2(a): Cleaning and transforming the data...")
+print("="*60)
 
+# Load the scraped data
+df = pd.read_csv("ml_articles_info.csv")
+
+# Function to parse publication_info into components
+def parse_publication_info(pub_info):
+    """
+    Parse publication_info string into authors, year, venue, and publisher.
+    Expected format: "Authors - Venue, Year - Publisher"
+    """
+    if pd.isna(pub_info) or pub_info == "":
+        return pd.Series(['', '', '', ''])
+    
+    # Split by ' - ' to separate main components
+    parts = pub_info.split(' - ')
+    
+    authors = ''
+    year = ''
+    venue = ''
+    publisher = ''
+    
+    if len(parts) >= 1:
+        authors = parts[0].strip()
+    
+    if len(parts) >= 2:
+        # Second part typically contains venue and year
+        middle_part = parts[1].strip()
+        # Extract year (4 digits)
+        year_match = re.search(r'\b(202[3-5])\b', middle_part)
+        if year_match:
+            year = year_match.group(1)
+            # Remove year and comma from venue
+            venue = re.sub(r',?\s*' + year + r'\s*', '', middle_part).strip()
+            venue = venue.rstrip(',').strip()
+        else:
+            venue = middle_part
+    
+    if len(parts) >= 3:
+        publisher = parts[2].strip()
+    
+    return pd.Series([authors, year, venue, publisher])
+
+# Apply the parsing function
+df[['authors', 'year', 'venue', 'publisher']] = df['publication_info'].apply(parse_publication_info)
+
+# Clean citation_count: remove "Cited by " and convert to integer
+df['citation_count'] = df['cited_by'].str.replace('Cited by ', '', regex=False).astype(int)
+
+# Convert year to integer (handle empty strings)
+df['year'] = pd.to_numeric(df['year'], errors='coerce')
+
+# Calculate avg_citations_per_year
+def calculate_avg_citations(row):
+    """Calculate average citations per year based on publication year"""
+    if pd.isna(row['year']):
+        return 0
+    
+    year = int(row['year'])
+    citation_count = row['citation_count']
+    
+    if year == 2023:
+        divisor = 3
+    elif year == 2024:
+        divisor = 2
+    elif year == 2025:
+        divisor = 1
+    else:
+        divisor = 1  # Default for unexpected years
+    
+    return round(citation_count / divisor, 4)
+
+df['avg_citations_per_year'] = df.apply(calculate_avg_citations, axis=1)
+
+# Reorder columns as specified
+df_cleaned = df[['title', 'authors', 'year', 'venue', 'publisher', 'citation_count', 'avg_citations_per_year']]
+
+# Save cleaned dataframe
+df_cleaned.to_csv("ml_articles_info-cleaned.csv", index=False, encoding="utf-8")
+print(f"Cleaned data saved to ml_articles_info-cleaned.csv")
+print(f"Shape: {df_cleaned.shape}")
+print("\nFirst few rows:")
+print(df_cleaned.head())
+
+# ---------- Task 2(b): Filter articles from 2024+ with >100 citations ----------
+print("\n" + "="*60)
+print("Task 2(b): Articles from 2024+ with >100 citations")
+print("="*60)
+
+filtered_articles = df_cleaned[(df_cleaned['year'] >= 2024) & (df_cleaned['citation_count'] > 100)]
+print(f"\nFound {len(filtered_articles)} articles:\n")
+for idx, row in filtered_articles.iterrows():
+    print(f"Title: {row['title']}")
+    print(f"Authors: {row['authors']}")
+    print(f"Year: {int(row['year'])}")
+    print(f"Citations: {row['citation_count']}")
+    print("-" * 60)
+
+# ---------- Task 2(c): Scatterplot of citation_count vs avg_citations_per_year ----------
+print("\n" + "="*60)
+print("Task 2(c): Creating scatterplot...")
+print("="*60)
+
+plt.figure(figsize=(10, 6))
+plt.scatter(df_cleaned['avg_citations_per_year'], df_cleaned['citation_count'], alpha=0.6)
+plt.xlabel('Average Citations per Year')
+plt.ylabel('Total Citation Count')
+plt.title('Total Citation Count vs. Average Citations per Year')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('scatterplot_citations.png', dpi=300)
+print("Scatterplot saved as scatterplot_citations.png")
+#plt.show()
+
+# ---------- Task 2(d): Histogram of avg_citations_per_year ----------
+print("\n" + "="*60)
+print("Task 2(d): Creating histogram...")
+print("="*60)
+
+plt.figure(figsize=(10, 6))
+plt.hist(df_cleaned['avg_citations_per_year'], bins=30, edgecolor='black', alpha=0.7)
+plt.xlabel('Average Citations per Year')
+plt.ylabel('Frequency')
+plt.title('Distribution of Average Citations per Year')
+plt.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('histogram_avg_citations.png', dpi=300)
+print("Histogram saved as histogram_avg_citations.png")
+#plt.show()
+
+# ---------- Task 2(e): Articles per year ----------
+print("\n" + "="*60)
+print("Task 2(e): Number of articles per year")
+print("="*60)
+
+articles_per_year = df_cleaned['year'].value_counts().sort_index()
+print("\nArticles published per year:")
+print(articles_per_year)
+
+plt.figure(figsize=(10, 6))
+articles_per_year.plot(kind='bar', color='steelblue', edgecolor='black')
+plt.xlabel('Publication Year')
+plt.ylabel('Number of Articles')
+plt.title('Number of Articles Published per Year (Since 2023)')
+plt.xticks(rotation=0)
+plt.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('barplot_articles_per_year.png', dpi=300)
+print("Bar plot saved as barplot_articles_per_year.png")
+#plt.show()
+
+# ---------- Task 2(f): Mean citation count per year ----------
+print("\n" + "="*60)
+print("Task 2(f): Mean citation count per publication year")
+print("="*60)
+
+mean_citations_per_year = df_cleaned.groupby('year')['citation_count'].mean().sort_index()
+print("\nMean citation count per publication year:")
+print(mean_citations_per_year)
+
+plt.figure(figsize=(10, 6))
+mean_citations_per_year.plot(kind='bar', color='coral', edgecolor='black')
+plt.xlabel('Publication Year')
+plt.ylabel('Mean Citation Count')
+plt.title('Mean Citation Count by Publication Year')
+plt.xticks(rotation=0)
+plt.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('barplot_mean_citations_per_year.png', dpi=300)
+print("Bar plot saved as barplot_mean_citations_per_year.png")
+#plt.show()
+
+print("\n" + "="*60)
+print("All Task 2 analyses completed!")
+print("="*60)
