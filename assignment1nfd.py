@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
+import matplotlib.pyplot as plt
+import re
 
 # ---------- Set up Selenium driver ----------
 options = webdriver.ChromeOptions()
@@ -170,3 +172,4 @@ df = pd.DataFrame({
 
 df.to_csv("ml_articles_info.csv", index=False, encoding="utf-8")
 print(f"✅ Scraped {len(df)} articles and saved to ml_articles_info.csv")
+
