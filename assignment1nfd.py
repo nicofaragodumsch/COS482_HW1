@@ -97,20 +97,23 @@ while page_count < max_pages:
         # ---------- Title extraction (preserves [HTML], [PDF], etc. without duplication) ----------
         title_tag = r.select_one(".gs_rt")
         if title_tag:
-            print(f"Debug: {title_tag}")  # Add this line to see the HTML structure
-            # Clone the element to avoid modifying the original
-            title_tag_copy = BeautifulSoup(str(title_tag), "lxml").select_one(".gs_rt")
+            # Remove debug line now that we've identified the issue
+            # print(f"Debug: {title_tag}")
             
-            # Get the content type span (if it exists)
-            content_type_span = title_tag_copy.find("span", class_="gs_ctg2")
+            # Get the FIRST content type span only (gs_ct1, not gs_ct2)
+            content_type_span = title_tag.find("span", class_="gs_ct1")
             content_type = content_type_span.get_text(strip=True) if content_type_span else ""
             
-            # Remove the content type span so it's not duplicated
-            if content_type_span:
-                content_type_span.decompose()
-            
-            # Get the remaining text (the actual title)
-            title_text = title_tag_copy.get_text(strip=True)
+            # Get the link text (the actual title)
+            a_tag = title_tag.find("a")
+            if a_tag:
+                title_text = a_tag.get_text(strip=True)
+            else:
+                # If no link, get all text but need to remove content type wrapper
+                title_text = title_tag.get_text(strip=True)
+                # Remove the content type from the text if it's there
+                if content_type and title_text.startswith(content_type):
+                    title_text = title_text[len(content_type):].strip()
             
             # Combine them properly
             title = f"{content_type} {title_text}" if content_type else title_text
@@ -167,4 +170,3 @@ df = pd.DataFrame({
 
 df.to_csv("ml_articles_info.csv", index=False, encoding="utf-8")
 print(f"✅ Scraped {len(df)} articles and saved to ml_articles_info.csv")
-
