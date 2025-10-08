@@ -12,7 +12,7 @@ import re
 # ---------- Set up Selenium driver ----------
 options = webdriver.ChromeOptions()
 
-# Use a temporary Chrome profile (not incognito, not your main profile)
+# Use a temporary Chrome profile (not incognito, not main profile)
 options.add_argument('--user-data-dir=C:\\Temp\\ChromeProfile')
 
 # Optional tweaks that make traffic look less like a bot
@@ -23,11 +23,6 @@ options.add_argument("--disable-features=IsolateOrigins,site-per-process")
 
 # CRITICAL: DO NOT use headless mode - it triggers CAPTCHA
 # options.add_argument('--headless')  # KEEP THIS COMMENTED OUT
-
-# Remove these - they can trigger detection
-# options.add_argument('--disable-gpu')
-# options.add_argument('--no-sandbox')
-# options.add_argument('--disable-dev-shm-usage')
 
 # Set a realistic window size (not randomized - too suspicious)
 options.add_argument("--window-size=1920,1080")
@@ -99,9 +94,6 @@ while page_count < max_pages:
         # ---------- Title extraction (preserves [HTML], [PDF], etc. without duplication) ----------
         title_tag = r.select_one(".gs_rt")
         if title_tag:
-            # Remove debug line now that we've identified the issue
-            # print(f"Debug: {title_tag}")
-            
             # Get the FIRST content type span only (gs_ct1, not gs_ct2)
             content_type_span = title_tag.find("span", class_="gs_ct1")
             content_type = content_type_span.get_text(strip=True) if content_type_span else ""
@@ -291,7 +283,6 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig('scatterplot_citations.png', dpi=300)
 print("Scatterplot saved as scatterplot_citations.png")
-#plt.show()
 
 # ---------- Task 2(d): Histogram of avg_citations_per_year ----------
 print("\n" + "="*60)
@@ -307,7 +298,6 @@ plt.grid(True, alpha=0.3, axis='y')
 plt.tight_layout()
 plt.savefig('histogram_avg_citations.png', dpi=300)
 print("Histogram saved as histogram_avg_citations.png")
-#plt.show()
 
 # ---------- Task 2(e): Articles per year ----------
 output_file.write("\n" + "="*60 + "\n")
@@ -328,7 +318,6 @@ plt.grid(True, alpha=0.3, axis='y')
 plt.tight_layout()
 plt.savefig('barplot_articles_per_year.png', dpi=300)
 print("Bar plot saved as barplot_articles_per_year.png")
-#plt.show()
 
 # ---------- Task 2(f): Mean citation count per year ----------
 output_file.write("\n" + "="*60 + "\n")
@@ -349,7 +338,6 @@ plt.grid(True, alpha=0.3, axis='y')
 plt.tight_layout()
 plt.savefig('barplot_mean_citations_per_year.png', dpi=300)
 print("Bar plot saved as barplot_mean_citations_per_year.png")
-#plt.show()
 
 print("\n" + "="*60)
 print(" All Task 2 analyses completed!")
